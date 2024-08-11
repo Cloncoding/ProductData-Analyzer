@@ -1,0 +1,132 @@
+﻿@page "/Analyze"
+@using System.Text.Json
+@using System.Text.RegularExpressions
+@using System.Globalization
+
+<PageTitle>Analyzer</PageTitle>
+
+<h1>Biere!</h1>
+<p>@text</p>
+
+
+@code {
+	//[Parameter]
+	[SupplyParameterFromQuery]
+	public string? filter { get; set; }
+
+	[SupplyParameterFromQuery]
+	public string url { get; set; }
+
+	public string? text { get; set; }
+
+
+	protected override async Task OnInitializedAsync()
+	{
+		if(url == null)
+		{
+			// provide url
+			return;
+		}
+
+		if(filter == null)
+		{
+			await GetAll();
+		}
+		else if (int.TryParse(filter, out int fType))
+		{
+			switch (fType)
+			{
+				case 1:
+					{
+						await GetMostExpensiveAndCheapest();
+						break;
+					}
+				case 2:
+					{
+						GetExcactPrice();
+						break;
+					}
+				case 3:
+					{
+						GetMostBottles();
+						break;
+					}
+				default:
+					{
+						await GetAll();
+						break;
+					}
+			}
+		}
+	}
+
+	private async Task GetMostExpensiveAndCheapest()
+	{
+		var data = await GetFromUrl();
+
+		ProductData mostExpensive = data[0];
+		float mostExpensivePrice = ExtractPriceFromText(mostExpensive.articles[0].pricePerUnitText);
+
+		ProductData cheapest = mostExpensive;
+		float cheapestPrice = mostExpensivePrice;
+
+		foreach(var product in data)
+		{
+			if(product != null && product.articles != null && product.articles.Length > 0)
+			{
+				foreach(var article in product.articles)
+				{
+					float price = ExtractPriceFromText(article.pricePerUnitText);
+
+					if(price > mostExpensivePrice)
+					{
+						mostExpensive = product;
+						mostExpensivePrice = price;
+					}
+					else if(price < cheapestPrice)
+					{
+						cheapest = product;
+						cheapestPrice = price;
+					}
+				}
+			}
+		}
+
+		text = "MostExpensive=" + JsonSerializer.Serialize(mostExpensive) + "--- Cheapest=" + JsonSerializer.Serialize(cheapest);
+	}
+
+	private float ExtractPriceFromText(string text)
+	{
+		var match = Regex.Match(text.Replace(',', '.'), @"([-+]?[0-9]*\.?[0-9]+)");
+		return Convert.ToSingle(match.Groups[1].Value, CultureInfo.InvariantCulture);
+	}
+
+	private void GetExcactPrice()
+	{
+
+	}
+
+	private void GetMostBottles()
+	{
+
+	}
+
+	private async Task GetAll()
+	{
+		var data = await GetFromUrl();
+	}
+
+
+	private async Task<List<ProductData>> GetFromUrl()
+	{
+		HttpClient client = new()
+		{
+			BaseAddress = new Uri(url)
+		};
+
+		HttpResponseMessage response = await client.GetAsync("");
+		var jsonResponse = await response.Content.ReadAsStringAsync();
+
+		return JsonSerializer.Deserialize<List<ProductData>>(jsonResponse);
+	}
+}

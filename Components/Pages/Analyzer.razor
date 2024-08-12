@@ -16,7 +16,7 @@
     public string? filter { get; set; }
 
     [SupplyParameterFromQuery]
-    public string url { get; set; }
+    public string? url { get; set; }
 
     [SupplyParameterFromQuery]
     public float? price { get; set; }
@@ -88,6 +88,11 @@
             {
                 foreach(var article in product.articles)
                 {
+                    if(article.pricePerUnitText == null)
+                    {
+                        continue;
+                    }
+
                     float price = ExtractPriceFromText(article.pricePerUnitText);
 
                     if(price > mostExpensivePrice)
@@ -131,6 +136,11 @@
             {
                 foreach(var article in product.articles)
                 {
+                    if(article.pricePerUnitText == null)
+                    {
+                        continue;
+                    }
+
                     if(article.price.ToString() == price.ToString())
                     {
                         matchWithPrice.Add(new Article(product.id, article), ExtractPriceFromText(article.pricePerUnitText));
@@ -157,6 +167,11 @@
             {
                 foreach(var article in product.articles)
                 {
+                    if(article.shortDescription == null)
+                    {
+                        continue;
+                    }
+
                     int bottles = Convert.ToInt32(article.shortDescription.Split('x')[0].Trim());
 
                     if(bottles > mostBottles)

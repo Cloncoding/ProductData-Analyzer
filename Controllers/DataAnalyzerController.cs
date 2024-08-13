@@ -42,12 +42,12 @@ namespace ProductData_Analyzer.Controllers
                     }
                 case 2:
                     {
-                        if(price == null)
+                        if(!price.HasValue)
                         {
                             return ProvidePrice;
                         }
 
-                        return GetWithSpecificPrice(data, price).ToJsonString(options);
+                        return GetWithSpecificPrice(data, price.Value).ToJsonString(options);
                     }
                 case 3:
                     {
@@ -55,12 +55,12 @@ namespace ProductData_Analyzer.Controllers
                     }
                 default:
                     {
-                        if(price == null)
+                        if(!price.HasValue)
                         {
                             return ProvidePrice;
                         }
 
-                        return GetAll(data, price).ToJsonString(options);
+                        return GetAll(data, price.Value).ToJsonString(options);
                     }
             }
         }
@@ -122,7 +122,7 @@ namespace ProductData_Analyzer.Controllers
             return Convert.ToSingle(match.Groups[1].Value, CultureInfo.InvariantCulture);
         }
 
-        private JsonNode GetWithSpecificPrice(List<ProductData> data, float? price)
+        private JsonNode GetWithSpecificPrice(List<ProductData> data, float price)
         {
             List<ProductData> match = new List<ProductData>();
 
@@ -140,10 +140,15 @@ namespace ProductData_Analyzer.Controllers
                         continue;
                     }
 
-                    if(article.price.ToString().Equals(price.ToString()))
+                    if(MathF.Abs(article.price - price) < 1e-9)
                     {
                         match.Add(new ProductData(product, article));
                     }
+
+                    /**if(article.price.ToString().Equals(price.ToString()))
+                    {
+                        match.Add(new ProductData(product, article));
+                    }**/
                 }
             }
 
@@ -188,7 +193,7 @@ namespace ProductData_Analyzer.Controllers
             return JsonSerializer.SerializeToNode(mostBottlesProduct, options);
         }
 
-        private JsonNode GetAll(List<ProductData> data, float? price)
+        private JsonNode GetAll(List<ProductData> data, float price)
         {
             JsonNode[] nodes =
             {
@@ -223,12 +228,12 @@ namespace ProductData_Analyzer.Controllers
                 return ProvideURL;
             }
 
-            if(price == null)
+            if(!price.HasValue)
             {
                 return ProvidePrice;
             }
 
-            return GetWithSpecificPrice(await GetFromUrl(url), price).ToJsonString(options);
+            return GetWithSpecificPrice(await GetFromUrl(url), price.Value).ToJsonString(options);
         }
 
         [HttpGet]
@@ -252,12 +257,12 @@ namespace ProductData_Analyzer.Controllers
                 return ProvideURL;
             }
 
-            if(price == null)
+            if(!price.HasValue)
             {
                 return ProvidePrice;
             }
 
-            return GetAll(await GetFromUrl(url), price).ToJsonString(options);
+            return GetAll(await GetFromUrl(url), price.Value).ToJsonString(options);
         }
     }
 }

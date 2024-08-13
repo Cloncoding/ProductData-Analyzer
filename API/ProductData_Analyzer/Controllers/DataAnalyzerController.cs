@@ -1,13 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using ProductData_Analyzer.src;
 using System.Text.Json;
-using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
-using Microsoft.Extensions.Options;
+using System.Text.Json.Nodes;
 
 namespace ProductData_Analyzer.Controllers
 {
@@ -37,7 +35,7 @@ namespace ProductData_Analyzer.Controllers
             {
                 case 1:
                     {
-                        return GetMostExpensiveAndCheapest(data);
+                        return GetMostExpensiveAndCheapest(data).ToString();
                     }
                 case 2:
                     {
@@ -46,11 +44,11 @@ namespace ProductData_Analyzer.Controllers
                             return "Please provide price as query paremeter!";
                         }
 
-                        return GetWithSpecificPrice(data, price);
+                        return GetWithSpecificPrice(data, price).ToString();
                     }
                 case 3:
                     {
-                        return GetMostBottles(data);
+                        return GetMostBottles(data).ToString();
                     }
                 default:
                     {
@@ -62,8 +60,6 @@ namespace ProductData_Analyzer.Controllers
                         return GetAll(data, price);
                     }
             }
-
-            return filter + " " + url + " " + price;
         }
 
         private async Task<List<ProductData>> GetFromUrl(string url)
@@ -80,7 +76,7 @@ namespace ProductData_Analyzer.Controllers
         }
 
 
-        private string GetMostExpensiveAndCheapest(List<ProductData> data)
+        private JsonNode GetMostExpensiveAndCheapest(List<ProductData> data)
         {
             ProductData? mostExpensive = null, cheapest = null;
             float mostExpensivePrice = 0, cheapestPrice = 0;
@@ -114,7 +110,7 @@ namespace ProductData_Analyzer.Controllers
                 }
             }
 
-            return JsonSerializer.Serialize(new ProductData[] { mostExpensive, cheapest }, options);
+            return JsonSerializer.SerializeToNode(new ProductData[] { mostExpensive, cheapest }, options);
         }
 
         private float ExtractPricePerLiter(string text)
@@ -123,7 +119,7 @@ namespace ProductData_Analyzer.Controllers
             return Convert.ToSingle(match.Groups[1].Value, CultureInfo.InvariantCulture);
         }
 
-        private string GetWithSpecificPrice(List<ProductData> data, float? price)
+        private JsonNode GetWithSpecificPrice(List<ProductData> data, float? price)
         {
             List<ProductData> match = new List<ProductData>();
 
@@ -148,10 +144,10 @@ namespace ProductData_Analyzer.Controllers
                 }
             }
 
-            return JsonSerializer.Serialize(match.OrderBy(p => ExtractPricePerLiter(p.articles[0].pricePerUnitText)).ToArray(), options);
+            return JsonSerializer.SerializeToNode(match.OrderBy(p => ExtractPricePerLiter(p.articles[0].pricePerUnitText)).ToArray(), options);
         }
 
-        private string GetMostBottles(List<ProductData> data)
+        private JsonNode GetMostBottles(List<ProductData> data)
         {
             ProductData? mostBottlesProduct = null;
             int mostBottles = 0;
@@ -178,14 +174,19 @@ namespace ProductData_Analyzer.Controllers
                 }
             }
 
-            return JsonSerializer.Serialize(mostBottlesProduct, options);
+            return JsonSerializer.SerializeToNode(mostBottlesProduct, options);
         }
 
         private string GetAll(List<ProductData> data, float? price)
         {
-            return JsonSerializer.Serialize(
-                new List<string>() { GetMostExpensiveAndCheapest(data), GetWithSpecificPrice(data, price), GetMostBottles(data) },
-                options);
+            JsonNode[] nodes =
+            {
+                GetMostExpensiveAndCheapest(data),
+                GetWithSpecificPrice(data, price),
+                GetMostBottles(data),
+            };
+
+            return JsonSerializer.Serialize(nodes, options);
         }
     }
 }

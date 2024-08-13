@@ -203,7 +203,7 @@ namespace ProductData_Analyzer.Controllers
 
         // Routes without filter paramater (better for bigger API)
         [HttpGet]
-        [Route("expensiveAndCheap")]
+        [Route("mostExpensiveAndCheapest")]
         public async Task<string> GetMostExpensiveAndCheapest(string? url)
         {
             if(url == null)

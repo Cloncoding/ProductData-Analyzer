@@ -35,7 +35,7 @@ namespace ProductData_Analyzer.Controllers
             {
                 case 1:
                     {
-                        return GetMostExpensiveAndCheapest(data).ToString();
+                        return GetMostExpensiveAndCheapest(data).ToJsonString(options);
                     }
                 case 2:
                     {
@@ -44,11 +44,11 @@ namespace ProductData_Analyzer.Controllers
                             return "Please provide price as query paremeter!";
                         }
 
-                        return GetWithSpecificPrice(data, price).ToString();
+                        return GetWithSpecificPrice(data, price).ToJsonString(options);
                     }
                 case 3:
                     {
-                        return GetMostBottles(data).ToString();
+                        return GetMostBottles(data).ToJsonString(options);
                     }
                 default:
                     {
@@ -57,7 +57,7 @@ namespace ProductData_Analyzer.Controllers
                             return "Please provide price as query paremeter!";
                         }
 
-                        return GetAll(data, price);
+                        return GetAll(data, price).ToJsonString(options);
                     }
             }
         }
@@ -72,7 +72,7 @@ namespace ProductData_Analyzer.Controllers
             HttpResponseMessage response = await client.GetAsync("");
             var jsonResponse = await response.Content.ReadAsStringAsync();
 
-            return JsonSerializer.Deserialize<List<ProductData>>(jsonResponse);
+            return JsonSerializer.Deserialize<List<ProductData>>(jsonResponse, options);
         }
 
 
@@ -149,7 +149,7 @@ namespace ProductData_Analyzer.Controllers
 
         private JsonNode GetMostBottles(List<ProductData> data)
         {
-            ProductData? mostBottlesProduct = null;
+            List<ProductData> mostBottlesProduct = new List<ProductData>();
             int mostBottles = 0;
 
             foreach(var product in data)
@@ -167,8 +167,16 @@ namespace ProductData_Analyzer.Controllers
 
                         if(bottles > mostBottles)
                         {
+                            mostBottlesProduct = new List<ProductData>()
+                            {
+                                new ProductData(product, article)
+                            };
+
                             mostBottles = bottles;
-                            mostBottlesProduct = new ProductData(product, article);
+                        }
+                        else if(bottles == mostBottles)
+                        {
+                            mostBottlesProduct.Add(new ProductData(product, article));
                         }
                     }
                 }
@@ -177,7 +185,7 @@ namespace ProductData_Analyzer.Controllers
             return JsonSerializer.SerializeToNode(mostBottlesProduct, options);
         }
 
-        private string GetAll(List<ProductData> data, float? price)
+        private JsonNode GetAll(List<ProductData> data, float? price)
         {
             JsonNode[] nodes =
             {
@@ -186,7 +194,7 @@ namespace ProductData_Analyzer.Controllers
                 GetMostBottles(data),
             };
 
-            return JsonSerializer.Serialize(nodes, options);
+            return JsonSerializer.SerializeToNode(nodes, options);
         }
     }
 }

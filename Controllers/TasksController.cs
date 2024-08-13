@@ -3,6 +3,7 @@
 namespace ProductData_Analyzer.Controllers
 {
     [Route("tasks")]
+    [Route("/")]
     [ApiController]
     public class TasksController : ControllerBase
     {

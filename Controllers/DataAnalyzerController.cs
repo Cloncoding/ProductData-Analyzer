@@ -86,7 +86,7 @@ namespace ProductData_Analyzer.Controllers
 
             foreach(var product in data)
             {
-                if(product.articles ==  null || product.articles.Length < 1)
+                if(product.articles == null || product.articles.Length < 1)
                 {
                     continue;
                 }

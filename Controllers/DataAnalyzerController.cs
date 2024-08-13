@@ -13,6 +13,9 @@ namespace ProductData_Analyzer.Controllers
     [Route("analyzer")]
     public class DataAnalyzerController : ControllerBase
     {
+        private const string ProvideURL = "Please provide URL as query paremeter!";
+        private const string ProvidePrice = "Please provide price as query paremeter!";
+
         private JsonSerializerOptions options = new JsonSerializerOptions
         {
             Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
@@ -25,7 +28,7 @@ namespace ProductData_Analyzer.Controllers
         {
             if(url == null)
             {
-                return "Please provide URL as query paremeter!";
+                return ProvideURL;
             }
 
             List<ProductData> data = await GetFromUrl(url);
@@ -41,7 +44,7 @@ namespace ProductData_Analyzer.Controllers
                     {
                         if(price == null)
                         {
-                            return "Please provide price as query paremeter!";
+                            return ProvidePrice;
                         }
 
                         return GetWithSpecificPrice(data, price).ToJsonString(options);
@@ -54,7 +57,7 @@ namespace ProductData_Analyzer.Controllers
                     {
                         if(price == null)
                         {
-                            return "Please provide price as query paremeter!";
+                            return ProvidePrice;
                         }
 
                         return GetAll(data, price).ToJsonString(options);
@@ -195,6 +198,66 @@ namespace ProductData_Analyzer.Controllers
             };
 
             return JsonSerializer.SerializeToNode(nodes, options);
+        }
+
+
+        // Routes without filter paramater (better for bigger API)
+        [HttpGet]
+        [Route("expensiveAndCheap")]
+        public async Task<string> GetMostExpensiveAndCheapest(string? url)
+        {
+            if(url == null)
+            {
+                return ProvideURL;
+            }
+
+            return GetMostExpensiveAndCheapest(await GetFromUrl(url)).ToJsonString(options);
+        }
+
+        [HttpGet]
+        [Route("specificPrice")]
+        public async Task<string> GetWithSpecificPrice(string? url, float? price)
+        {
+            if(url == null)
+            {
+                return ProvideURL;
+            }
+
+            if(price == null)
+            {
+                return ProvidePrice;
+            }
+
+            return GetWithSpecificPrice(await GetFromUrl(url), price).ToJsonString(options);
+        }
+
+        [HttpGet]
+        [Route("mostBottles")]
+        public async Task<string> GetMostBottles(string? url)
+        {
+            if(url == null)
+            {
+                return ProvideURL;
+            }
+
+            return GetMostBottles(await GetFromUrl(url)).ToJsonString(options);
+        }
+
+        [HttpGet]
+        [Route("all")]
+        public async Task<string> GetAll(string? url, float? price)
+        {
+            if(url == null)
+            {
+                return ProvideURL;
+            }
+
+            if(price == null)
+            {
+                return ProvidePrice;
+            }
+
+            return GetAll(await GetFromUrl(url), price).ToJsonString(options);
         }
     }
 }
